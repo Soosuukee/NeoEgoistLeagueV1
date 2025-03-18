@@ -1,0 +1,48 @@
+services:
+  # Service pour MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: neo_egoist_league
+      MYSQL_USER: ego
+      MYSQL_PASSWORD: Jinpachi
+    volumes:
+      - ./data:/var/lib/mysql
+    ports:
+      - "3306:3306"  # Port pour MySQL, pas de conflit ici
+
+  # Service pour phpMyAdmin (port modifié pour éviter conflit avec php)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+    ports:
+      - "8081:80"  # Modifié pour éviter conflit avec le serveur PHP
+
+  # Service pour le serveur PHP avec PHP 8.4 et installation de MySQLi
+  php:
+    image: php:8.4-apache
+    container_name: php
+    restart: always
+    volumes:
+      - ./src/public:/var/www/html
+      - ./src/images:/var/www/html/images
+      - ./src/app:/var/www/app
+      - ./src/uploads:/var/www/html/uploads
+    ports:
+      - "8080:80"  # Port 8080 pour ton serveur PHP
+    depends_on:
+      - db
+    command: >
+      bash -c "docker-php-ext-install mysqli pdo pdo_mysql && apache2-foreground"
+
+# Réseau par défaut, ajustez selon vos besoins
+networks:
+  default:
+    external: true
+    name: mynetwork  # Assure-toi que "mynetwork" existe ou crée-le
