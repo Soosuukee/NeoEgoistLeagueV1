@@ -28,7 +28,7 @@ class DatabaseManager
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             return $pdo;
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             echo ("Erreur de connexion a la base de données. connectDB()");
             die();
         }

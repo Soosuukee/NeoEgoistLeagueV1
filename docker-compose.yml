@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   # Service pour MySQL
   db:
@@ -12,7 +14,7 @@ services:
     volumes:
       - ./data:/var/lib/mysql
     ports:
-      - "3306:3306"  # Port pour MySQL, pas de conflit ici
+      - "3306:3306" # Port pour MySQL, pas de conflit ici
 
   # Service pour phpMyAdmin (port modifié pour éviter conflit avec php)
   phpmyadmin:
@@ -22,12 +24,12 @@ services:
     environment:
       PMA_HOST: db
     ports:
-      - "8081:80"  # Modifié pour éviter conflit avec le serveur PHP
+      - "8081:80" # Modifié pour éviter conflit avec le serveur PHP
 
-  # Service pour le serveur PHP avec PHP 8.4 et installation de MySQLi
-  php:
-    image: php:8.4-apache
-    container_name: php
+  # Service pour PHP avec Apache (no need for PHP-FPM here)
+  php-apache:
+    build: .
+    container_name: php-apache
     restart: always
     volumes:
       - ./src/public:/var/www/html
@@ -35,13 +37,12 @@ services:
       - ./src/app:/var/www/app
       - ./src/uploads:/var/www/html/uploads
     ports:
-      - "8080:80"  # Port 8080 pour ton serveur PHP
+      - "8080:80"  # Port pour Apache (où tu visualises ta page)
     depends_on:
       - db
-    command: >
-      bash -c "docker-php-ext-install mysqli pdo pdo_mysql && apache2-foreground"
+    networks:
+      - default
 
-# Réseau par défaut, ajustez selon vos besoins
 networks:
   default:
     external: true
