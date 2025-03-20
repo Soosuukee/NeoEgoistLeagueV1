@@ -13,7 +13,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Copy your application files to the Apache container
 COPY src/public /var/www/html
 COPY src/app /var/www/app
-COPY ./src/uploads /var/www/html/uploads
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
