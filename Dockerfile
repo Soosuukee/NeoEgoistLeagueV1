@@ -1,15 +1,24 @@
-FROM php:8.2-cli
+# PHP 8.3 with Apache
+FROM php:8.3-apache
 
-# Installation de Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install required dependencies and PHP extensions
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev unzip git curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql mysqli
 
-# Définition du répertoire de travail
-WORKDIR /var/www/html
+# Install Composer globally
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Copier les fichiers sources dans le conteneur
-COPY src/ .
+# Copy your application files to the Apache container
+COPY src/public /var/www/html
+COPY src/app /var/www/app
 
-# Installer les dépendances
-RUN composer install --no-dev --prefer-dist
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
-CMD ["php", "-S", "0.0.0.0:8000"]
+# Verify Composer installation
+RUN composer --version
+
+# Expose the port for Apache (80 by default)
+EXPOSE 80

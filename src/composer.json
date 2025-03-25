@@ -1,0 +1,14 @@
+{
+    "name": "florian/neoegoistleague",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "florian"
+        }
+    ],
+    "require": {}
+}
