@@ -32,8 +32,7 @@ services:
     container_name: php-apache
     restart: always
     volumes:
-      - ./src/public:/var/www/html
-      - ./src/app:/var/www/app
+      - ./src:/var/www/html
     ports:
       - "8080:80" # Port pour Apache (où tu visualises ta page)
     depends_on:

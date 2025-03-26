@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Copy your application files to the Apache container
-COPY src/public /var/www/html
-COPY src/app /var/www/app
+COPY src /
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
