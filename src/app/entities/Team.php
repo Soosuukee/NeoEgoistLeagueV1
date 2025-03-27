@@ -1,6 +1,9 @@
 <?php
 
-require_once('Country.php');
+namespace App\Entities;
+
+use App\Entities\Country;
+
 class Team
 {
     private int $id;
@@ -28,6 +31,11 @@ class Team
         return $this->name;
     }
 
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
     public function getCountry(): Country
     {
         return $this->country;
@@ -41,5 +49,10 @@ class Team
     public function getTeamLogo(): string
     {
         return $this->team_logo;
+    }
+
+    public function setTeamLogo(string $team_logo): void
+    {
+        $this->team_logo = $team_logo;
     }
 }

@@ -1,42 +1,50 @@
 <?php
-require_once('DatabaseManager.php');
-require_once(__DIR__ . '/../entities/Player.php');
-require_once(__DIR__ . '/../entities/Team.php');
-require_once(__DIR__ . '/../entities/Country.php');
-require_once(__DIR__ . '/../entities/Position.php');
-require_once(__DIR__ . '/../entities/Image.php');
-require_once(__DIR__ . '/../entities/PlayerImage.php');
 
+namespace App\Managers;
+
+use App\Entities\Player;
+use App\Entities\Image;
+use App\Managers\DatabaseManager;
+use App\Entities\Team;
+use App\Entities\Country;
+use App\Entities\Weapon;
+use App\Entities\Offer;
+use App\Entities\Position;
+use Exception;
 
 class PlayerManager extends DatabaseManager
 {
-    private PDO $db;
-
-    public function __construct(PDO $db)
-    {
-        $this->db = $db;
-    }
 
     public function selectPlayerByID(int $id): ?Player
     {
-        $query = $this->db->prepare("
+        $query = $this->getConnexion()->prepare("
         SELECT 
             p.id AS player_id, p.name AS player_name, p.number, 
             t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
-            c.id AS country_id, c.name AS country_name, c.flag,
-            po.id AS position_id, po.name AS position_name,
-            i.id AS image_id, i.url as image_url
-        FROM players p
+            c.id AS country_id,  c.name AS country_name, c.flag,
+            i.id AS image_id, i.url AS image_url,
+            COALESCE(GROUP_CONCAT(po.id, ':', po.name ORDER BY po.id SEPARATOR ','), 'Aucune') AS `position`,
+            COALESCE(GROUP_CONCAT(o.id, ':', o.name ORDER BY o.id SEPARATOR ','), 'Aucune') AS `offer`,
+            COALESCE(GROUP_CONCAT(w.id, ':', w.name ORDER BY w.id SEPARATOR ','), 'Aucune') AS `weapon`
+        FROM player p
         JOIN team t ON p.team_id = t.id
         JOIN country c ON p.country_id = c.id
-        JOIN position po ON p.position_id = po.id
+        LEFT JOIN player_position pp ON p.id = pp.player_id
+        LEFT JOIN position po ON pp.position_id = po.id
         LEFT JOIN player_image pi ON pi.player_id = p.id
         LEFT JOIN image i ON pi.image_id = i.id
-        WHERE p.id = :id;
+        LEFT JOIN player_offer po2 ON p.id = po2.player_id
+        LEFT JOIN offer o ON po2.offer_id = o.id
+        LEFT JOIN player_weapon pw ON p.id = pw.player_id  -- Corrigé ici pour joindre sur p.id
+        LEFT JOIN weapon w ON pw.weapon_id = w.id  -- Corrigé ici pour la jointure avec weapon
+        WHERE p.id = :id
+        GROUP BY p.id, t.id, c.id, i.id;
         ");
 
+
         $query->execute([":id" => $id]);
-        $player = $query->fetch(PDO::FETCH_ASSOC);
+        $player = $query->fetch();
+        var_dump($player);
 
         if ($player !== false) {
             // Instanciation des objets
@@ -84,7 +92,7 @@ class PlayerManager extends DatabaseManager
 
     public function selectAllPlayers(): array
     {
-        $queryAll = $this->db->prepare("
+        $queryAll = $this->getConnexion()->prepare("
         SELECT 
             p.id AS player_id, p.name AS player_name, p.number, 
             t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
@@ -102,7 +110,7 @@ class PlayerManager extends DatabaseManager
         $queryAll->execute();
         $players = [];
 
-        while ($player = $queryAll->fetch(PDO::FETCH_ASSOC)) {
+        while ($player = $queryAll->fetch()) {
             if ($player !== false) {
                 // Instanciation des objets
                 $team = new Team(
@@ -152,7 +160,7 @@ class PlayerManager extends DatabaseManager
 
     public function addPlayer(Player $player): void
     {
-        $queryAdd = $this->db->prepare("
+        $queryAdd = $this->getConnexion()->prepare("
         INSERT INTO player (name,jersey_number,team_id,country_id,position_id)
         VALUES (:name, :jersey_number, :team_id, :country_id, :position_id)
         ");
@@ -161,14 +169,13 @@ class PlayerManager extends DatabaseManager
             ':name' => $player->getName(),
             ':jersey_number' => $player->getNumber(),
             ':team_id' => $player->getTeam()->getId(),
-            ':country_id' => $player->getCountry()->getId(),
-            ':position_id' => $player->getPosition()->getId()
+            ':country_id' => $player->getCountry()->getId()
         ]);
     }
 
     public function updatePlayer(Player $player): void
     {
-        $queryUpdate = $this->db->prepare("
+        $queryUpdate = $this->getConnexion()->prepare("
         UPDATE player
         SET name = :name, jersey_number = :jersey_number, team_id = :team_id, country_id = :country_id, position_id = :position_id
         WHERE id = :id
@@ -178,21 +185,20 @@ class PlayerManager extends DatabaseManager
             ':name' => $player->getName(),
             ':jersey_number' => $player->getNumber(),
             ':team_id' => $player->getTeam()->getId(),
-            ':country_id' => $player->getCountry()->getId(),
-            ':position_id' => $player->getPosition()->getId()
+            ':country_id' => $player->getCountry()->getId()
         ]);
     }
 
     public function deletePlayer(int $id): void
     {
-        $queryDelete = $this->db->prepare("
+        $queryDelete = $this->getConnexion()->prepare("
         DELETE FROM player WHERE id = :id ");
         $queryDelete->execute([':id' => $id]);
     }
 
     public function getPlayerByName(string $player): ?array
     {
-        $queryName = $this->db->prepare("
+        $queryName = $this->getConnexion()->prepare("
             SELECT 
                 p.id AS player_id, p.name AS player_name, p.number, 
                 t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
@@ -216,7 +222,7 @@ class PlayerManager extends DatabaseManager
 
     public function getPlayersByTeam(int $teamId): array
     {
-        $queryTeam = $this->db->prepare("
+        $queryTeam = $this->getConnexion()->prepare("
             SELECT 
                 p.id AS player_id, p.name AS player_name, p.number, 
                 t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
@@ -233,13 +239,13 @@ class PlayerManager extends DatabaseManager
         ");
 
         $queryTeam->execute([":teamId" => $teamId]);
-        return $queryTeam->fetchAll(PDO::FETCH_ASSOC);
+        return $queryTeam->fetchAll();
     }
 
 
     public function getPlayersByCountry(int $countryId): array
     {
-        $queryCountry = $this->db->prepare("
+        $queryCountry = $this->getConnexion()->prepare("
             SELECT 
                 p.id AS player_id, p.name AS player_name, p.number, 
                 t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
@@ -256,12 +262,12 @@ class PlayerManager extends DatabaseManager
         ");
 
         $queryCountry->execute([":countryId" => $countryId]);
-        return $queryCountry->fetchAll(PDO::FETCH_ASSOC);
+        return $queryCountry->fetchAll();
     }
 
     public function getPlayersByPosition(int $positionId): array
     {
-        $queryPosition = $this->db->prepare("
+        $queryPosition = $this->getConnexion()->prepare("
             SELECT 
                 p.id AS player_id, p.name AS player_name, p.number, 
                 t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
@@ -278,7 +284,7 @@ class PlayerManager extends DatabaseManager
         ");
 
         $queryPosition->execute([":positionId" => $positionId]);
-        return $queryPosition->fetchAll(PDO::FETCH_ASSOC);
+        return $queryPosition->fetchAll();
     }
 
     public function getPlayersByTeamAndCountry(?int $teamId = null, ?int $countryId = null): array
@@ -312,10 +318,10 @@ class PlayerManager extends DatabaseManager
         }
 
         try {
-            $stmt = $this->db->prepare($queryTeamCountry);
+            $stmt = $this->getConnexion()->prepare($queryTeamCountry);
             $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []; // Retourne un tableau vide si aucun joueur trouvé
-        } catch (PDOException $e) {
+            return $stmt->fetchAll() ?: []; // Retourne un tableau vide si aucun joueur trouvé
+        } catch (Exception $e) {
             error_log("Erreur SQL : " . $e->getMessage());
             return []; // Retourner un tableau vide en cas d'erreur
         }
@@ -352,10 +358,10 @@ class PlayerManager extends DatabaseManager
         }
 
         try {
-            $stmt = $this->db->prepare($queryTeamPosition);
+            $stmt = $this->getConnexion()->prepare($queryTeamPosition);
             $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []; // Retourne un tableau vide si aucun joueur trouvé
-        } catch (PDOException $e) {
+            return $stmt->fetchAll() ?: []; // Retourne un tableau vide si aucun joueur trouvé
+        } catch (Exception $e) {
             error_log("Erreur SQL : " . $e->getMessage());
             return []; // Retourner un tableau vide en cas d'erreur
         }
@@ -392,10 +398,10 @@ class PlayerManager extends DatabaseManager
         }
 
         try {
-            $stmt = $this->db->prepare($querycountryPosition);
+            $stmt = $this->getConnexion()->prepare($querycountryPosition);
             $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []; // Retourne un tableau vide si aucun joueur trouvé
-        } catch (PDOException $e) {
+            return $stmt->fetchAll() ?: []; // Retourne un tableau vide si aucun joueur trouvé
+        } catch (Exception $e) {
             error_log("Erreur SQL : " . $e->getMessage());
             return []; // Retourner un tableau vide en cas d'erreur
         }
@@ -437,14 +443,12 @@ class PlayerManager extends DatabaseManager
         }
 
         try {
-            $stmt = $this->db->prepare($queryCountryPositionTeam);
+            $stmt = $this->getConnexion()->prepare($queryCountryPositionTeam);
             $stmt->execute($params);
             return $stmt->fetchAll() ?: []; // Retourne un tableau vide si aucun joueur trouvé
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             error_log("Erreur SQL : " . $e->getMessage());
             return []; // Retourner un tableau vide en cas d'erreur
         }
     }
-}   public function add(?int $playerId ){
-    return 3+4;
 }

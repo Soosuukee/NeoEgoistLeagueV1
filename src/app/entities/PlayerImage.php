@@ -1,6 +1,10 @@
 <?php
-require_once('Player.php');
-require_once('Image.php'); 
+
+namespace App\Entities;
+
+use App\Entities\Player;
+use App\Entities\Image;
+
 class PlayerImage
 {
     private Player $player;

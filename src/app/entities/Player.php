@@ -1,8 +1,10 @@
 <?php
 
-require_once('Country.php');
-require_once('Team.php');
-require_once('Position.php');
+namespace App\Entities;
+
+use App\Entities\Country;
+use App\Entities\Team;
+
 class Player
 {
     private int $id;
@@ -10,16 +12,14 @@ class Player
     private ?int $jersey_number;
     private Team $team;
     private Country $country;
-    private Position $position;
 
-    public function __construct(int $id, string $name, ?int $jersey_number, Team $team, Country $country, Position $position)
+    public function __construct(int $id, string $name, ?int $jersey_number, Team $team, Country $country)
     {
         $this->id = $id;
         $this->name = $name;
         $this->jersey_number = $jersey_number;
         $this->team = $team;
         $this->country = $country;
-        $this->position = $position;
     }
 
     public function getId(): int
@@ -44,9 +44,6 @@ class Player
 
     public function setNumber(?int $jersey_number): void
     {
-        if ($jersey_number !== null && ($jersey_number < 1 || $jersey_number > 99)) {
-            throw new InvalidArgumentException("Le numéro du joueur doit être entre 1 et 99.");
-        }
         $this->jersey_number = $jersey_number;
     }
 
@@ -58,10 +55,5 @@ class Player
     public function getCountry(): Country
     {
         return $this->country;
-    }
-
-    public function getPosition(): Position
-    {
-        return $this->position;
     }
 }

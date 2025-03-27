@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entities;
+
 class Image
 {
     private int $id;

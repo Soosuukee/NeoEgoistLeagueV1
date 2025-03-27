@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entities;
+
 class Weapon
 {
     private int $id;

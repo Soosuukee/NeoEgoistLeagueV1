@@ -1,6 +1,10 @@
 <?php
-require_once('Player.php');
-require_once('Team.php');
+
+namespace App\Entities;
+
+use App\Entities\Team;
+use App\Entities\Player;
+
 class Offer
 {
     private int $id;

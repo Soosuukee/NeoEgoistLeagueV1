@@ -1,5 +1,10 @@
 <?php
 
+namespace App\Managers;
+
+use PDO;
+use PDOException;
+
 class DatabaseManager
 {
     private static ?PDO $pdo = null;

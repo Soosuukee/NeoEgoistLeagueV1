@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entities;
+
 class Position
 {
     private int $id;

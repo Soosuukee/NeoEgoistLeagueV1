@@ -1,6 +1,10 @@
 <?php
-require_once('Weapon.php');
-require_once('Player.php');
+
+namespace App\Entities;
+
+use App\Entities\Player;
+use App\Entities\Weapon;
+
 class PlayerWeapon
 {
     private Player $player;
