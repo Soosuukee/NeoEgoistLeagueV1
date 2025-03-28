@@ -11,15 +11,15 @@ class Team
 
     private Country $country;
     private bool $is_in_nel;
-    private string $team_logo;
+    private string $team_image;
 
-    public function __construct(int $id, string $name, Country $country, bool $is_in_nel, string $team_logo)
+    public function __construct(int $id, string $name, Country $country, bool $is_in_nel, string $team_image)
     {
         $this->id = $id;
         $this->name = $name;
         $this->country = $country;
         $this->is_in_nel = $is_in_nel;
-        $this->team_logo = $team_logo;
+        $this->team_image = $team_image;
     }
     public function getId(): int
     {
@@ -48,11 +48,11 @@ class Team
 
     public function getTeamLogo(): string
     {
-        return $this->team_logo;
+        return $this->team_image;
     }
 
-    public function setTeamLogo(string $team_logo): void
+    public function setTeamLogo(string $team_image): void
     {
-        $this->team_logo = $team_logo;
+        $this->team_image = $team_image;
     }
 }
