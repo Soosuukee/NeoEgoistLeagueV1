@@ -35,4 +35,28 @@ class PlayerManager extends DatabaseManager
         }
         return $team;
     }
+
+    public function selectAllTeam(): array
+    {
+        $queryAllTeam = $this->getConnexion()->prepare("
+        SELECT  
+            t.id AS team_id, t.name AS team_name, t.country_id AS team_country_id, t.is_in_nel, t.team_image,
+            c.id AS country_id, c.name AS country_name, c.flag,
+        FROM team t
+        JOIN country c ON t.country_id = c.id
+        ");
+
+        $queryAllTeam->execute();
+        $teams = [];
+        foreach ($teams as $team) {
+            $teams[] = new Team(
+                $team['team_id'],
+                $team['team_name'],
+                new Country($team['team_country_id'], $team['country_name'], $team['flag']),
+                $team['is_in_nel'],
+                $team['team_image']
+            );
+        }
+        return $teams;
+    }
 }
