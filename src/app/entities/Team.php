@@ -46,6 +46,12 @@ class Team
         return $this->is_in_nel;
     }
 
+    public function setIsInNel(bool $is_in_nel): void
+    {
+        $this->is_in_nel = $is_in_nel;
+    }
+
+
     public function getTeamLogo(): string
     {
         return $this->team_image;

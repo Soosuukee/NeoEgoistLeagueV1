@@ -6,7 +6,7 @@ use App\Entities\Country;
 use App\Entities\Team;
 use App\Managers\DatabaseManager;
 
-class PlayerManager extends DatabaseManager
+class TeamManager extends DatabaseManager
 {
 
     public function selectTeamById(int $id): ?Team
@@ -58,5 +58,49 @@ class PlayerManager extends DatabaseManager
             );
         }
         return $teams;
+    }
+
+    public function addTeam(Team $team): void
+    {
+        $queryAdd = $this->getConnexion()->prepare("
+        INSERT INTO team (name,country_id,team_image)
+        VALUES (:name, :country_id, :is_in_NEL, :team_image)
+        ");
+
+        $queryAdd->execute([
+            ':name' => $team->getName(),
+            ':country_id' => $team->getCountry()->getId(),
+            ':is_in_NEL' => $team->getIsInNel(),
+            ':team_image' => $team->getTeamLogo()
+        ]);
+    }
+
+    public function updateTeam(Team $team): void
+    {
+        $queryUpdate = $this->getConnexion()->prepare("
+        UPDATE team
+        SET name = :name, country_id = :country_id, is_in_NEL = :is_in_NEL, team_image  = :team_image
+        WHERE id = :id
+        ");
+
+        $queryUpdate->execute([
+            ':name' => $team->getName(),
+            ':country_id' => $team->getCountry()->getId(),
+            'is_in_NEL' => $team->getIsInNel(),
+            ':team_image' => $team->getTeamLogo(),
+            ':id' => $team->getId()
+        ]);
+    }
+
+    public function deleteTeam(int $teamId): void
+    {
+        $queryDelete = $this->getConnexion()->prepare("
+        DELETE FROM team
+        WHERE id = :id
+    ");
+
+        $queryDelete->execute([
+            ':id' => $teamId  // Utilisation de l'ID de l'équipe à supprimer
+        ]);
     }
 }
